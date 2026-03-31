@@ -24,6 +24,8 @@ target_sources(nanoipc_server INTERFACE ${CMAKE_CURRENT_LIST_DIR}/nanoipc_server
 target_include_directories(nanoipc_server INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 target_link_libraries(nanoipc_server INTERFACE nanocobs_lib)
 
-if(NOT DEFINED NO_TESTS)
-    add_subdirectory(tests)
+option(BUILD_TESTS "Build the project's test suite" ON)
+if(BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
 endif()

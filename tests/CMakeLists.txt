@@ -13,7 +13,7 @@ add_executable(
 target_link_libraries(
 	nanoipc_tests
 	PRIVATE
-	nanoipc
+	nanoipc_server
 	gtest
 	gtest_main
 )
