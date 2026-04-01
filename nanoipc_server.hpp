@@ -31,7 +31,9 @@ namespace nanoipc {
 		NanoIpcServer(const NanoIpcServer&) = default;
 		NanoIpcServer& operator=(const NanoIpcServer&) = default;
 		virtual ~NanoIpcServer() noexcept = default;
-		void process();
+		void process() {
+			throw std::runtime_error("not implemented");
+		}
 	private:
 		RequestHandler m_request_handler;
 		RequestParser m_request_parser;
