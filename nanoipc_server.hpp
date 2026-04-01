@@ -35,6 +35,10 @@ namespace nanoipc {
 		NanoIpcServer& operator=(const NanoIpcServer&) = default;
 		virtual ~NanoIpcServer() noexcept = default;
 		void process() {
+			const auto frame_raw_data = read_frame(m_read_buffer);
+			if (!frame_raw_data.has_value()) {
+				return;
+			}
 			throw std::runtime_error("not implemented");
 		}
 	private:
