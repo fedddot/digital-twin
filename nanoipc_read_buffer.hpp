@@ -10,7 +10,7 @@ namespace nanoipc {
 		virtual ~ReadBuffer() noexcept = default;
 		virtual std::uint8_t pop_front() = 0;
 		virtual std::size_t size() const = 0;
-		virtual std::uint8_t get() const = 0;
+		virtual std::uint8_t get(const std::size_t index) const = 0;
 	};
 }
 
