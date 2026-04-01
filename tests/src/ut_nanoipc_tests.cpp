@@ -3,6 +3,7 @@
 #include <string>
 
 #include "gtest/gtest.h"
+#include <vector>
 
 #include "nanoipc_server.hpp"
 #include "nanoipc_utils.hpp"
@@ -14,7 +15,7 @@ using ApiResponse = int;
 using TestNanoIpc = NanoIpcServer<ApiRequest, ApiResponse>;
 
 static ApiRequest parse_request(const std::uint8_t *raw_data, const std::size_t raw_data_size);
-static std::size_t serialize_response(const ApiResponse& response, std::uint8_t *dest_buff, const std::size_t dest_buff_capacity);
+static std::vector<std::uint8_t> serialize_response(const ApiResponse& response);
 
 class VectorBuffer : public ReadBuffer {
 public:
@@ -70,25 +71,10 @@ ApiRequest parse_request(const std::uint8_t *raw_data, const std::size_t raw_dat
 	return ApiRequest(reinterpret_cast<const char*>(raw_data), raw_data_size);
 }
 
-std::size_t serialize_response(const ApiResponse& response, std::uint8_t *dest_buff, const std::size_t dest_buff_capacity) {
-	if (dest_buff_capacity < sizeof(ApiResponse)) {
-		throw std::runtime_error("insufficient buffer capacity in serialize_response");
-	}
+std::vector<std::uint8_t> serialize_response(const ApiResponse& response) {
+	std::vector<std::uint8_t> serial_response(sizeof(ApiResponse));
 	for (auto i = 0; i < sizeof(ApiResponse); ++i) {
-		dest_buff[i] = (response >> (i * CHAR_BIT)) & 0xFF;
+		serial_response[i] = (response >> (i * CHAR_BIT)) & 0xFF;
 	}
-	return sizeof(ApiResponse);
-}
-
-void write_request_to_buffer(VectorBuffer *buffer, const ApiRequest& request) {
-	enum { BUFFER_CAPACITY = 256 };
-	if (request.size() >= BUFFER_CAPACITY) {
-		throw std::invalid_argument("request too large to encode in buffer");
-	}
-	std::uint8_t temp_buffer[BUFFER_CAPACITY];
-	std::size_t encoded_size = 0;
-	for (auto i = std::size_t(0); i < request.size(); ++i) {
-		temp_buffer[i] = static_cast<std::uint8_t>(request[i]);
-	}
-	
+	return serial_response;
 }
