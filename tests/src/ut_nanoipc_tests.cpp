@@ -5,6 +5,7 @@
 #include "gtest/gtest.h"
 
 #include "nanoipc_server.hpp"
+#include "nanoipc_utils.hpp"
 
 using namespace nanoipc;
 
@@ -42,18 +43,22 @@ private:
 	std::vector<std::uint8_t> m_data;
 };
 
-static void write_request_to_buffer(VectorBuffer *buffer, const ApiRequest& request);
-
 TEST(ut_nanoipc_server, sanity) {
 	// GIVEN
-	VectorBuffer read_buffer;
+	const auto test_request = ApiRequest("hello world");
 	auto request_handler = [](const ApiRequest& request) -> ApiResponse {
 		return static_cast<ApiResponse>(request.size());
 	};
 	auto serial_data_writer = [](const std::uint8_t *raw_data, const std::size_t raw_data_size) {
 		// do nothing
 	};
+
 	// WHEN
+	VectorBuffer read_buffer;
+	const auto encoded_request = encode_frame((std::uint8_t *)(test_request.c_str()), test_request.size());
+	for (const auto ch: encoded_request) {
+		read_buffer.push_back(ch);
+	}
 	TestNanoIpc nano_ipc_server(request_handler, parse_request, serialize_response, serial_data_writer, &read_buffer);
 
 	// THEN

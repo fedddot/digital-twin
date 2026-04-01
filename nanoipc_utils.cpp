@@ -39,7 +39,7 @@ std::vector<std::uint8_t> nanoipc::encode_frame(const std::uint8_t *frame_data, 
     std::size_t encoded_frame_data_size = 0;
 
     while (true) {
-        encoded_frame_data.reserve(receiver_data_size);
+        encoded_frame_data.resize(receiver_data_size);
         const auto encode_result = cobs_encode(frame_data, frame_data_size, encoded_frame_data.data(), encoded_frame_data.capacity(), &encoded_frame_data_size);
         if (encode_result == COBS_RET_SUCCESS) {
             break;
@@ -54,8 +54,7 @@ std::vector<std::uint8_t> nanoipc::encode_frame(const std::uint8_t *frame_data, 
 }
 
 std::vector<std::uint8_t> nanoipc::decode_frame(const std::uint8_t *frame_data, const std::size_t frame_data_size) {
-    std::vector<std::uint8_t> decoded_frame_data;
-    decoded_frame_data.reserve(frame_data_size);
+    std::vector<std::uint8_t> decoded_frame_data(frame_data_size);
     std::size_t decoded_frame_data_size = 0;
     const auto decode_result = cobs_decode(frame_data, frame_data_size, decoded_frame_data.data(), decoded_frame_data.capacity(), &decoded_frame_data_size);
     if (decode_result != COBS_RET_SUCCESS) {
