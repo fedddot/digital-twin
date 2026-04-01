@@ -4,8 +4,6 @@
 
 #include "gtest/gtest.h"
 
-#include "cobs.h"
-
 #include "nanoipc_server.hpp"
 
 using namespace nanoipc;

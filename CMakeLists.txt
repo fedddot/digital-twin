@@ -15,17 +15,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nanocobs)
 
-add_library(nanocobs_lib INTERFACE)
-target_sources(nanocobs_lib INTERFACE ${nanocobs_SOURCE_DIR}/cobs.c)
-target_include_directories(nanocobs_lib INTERFACE ${nanocobs_SOURCE_DIR})
-
 add_library(nanoipc_read_buffer INTERFACE)
 target_include_directories(nanoipc_read_buffer INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
 add_library(nanoipc_utils INTERFACE)
-target_sources(nanoipc_utils INTERFACE ${CMAKE_CURRENT_LIST_DIR}/nanoipc_utils.cpp)
-target_include_directories(nanoipc_utils INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(nanoipc_utils INTERFACE nanocobs_lib nanoipc_read_buffer)
+target_sources(nanoipc_utils INTERFACE ${CMAKE_CURRENT_LIST_DIR}/nanoipc_utils.cpp ${nanocobs_SOURCE_DIR}/cobs.c)
+target_include_directories(nanoipc_utils INTERFACE ${CMAKE_CURRENT_LIST_DIR} ${nanocobs_SOURCE_DIR})
+target_link_libraries(nanoipc_utils INTERFACE nanoipc_read_buffer)
 
 add_library(nanoipc_server INTERFACE)
 target_sources(nanoipc_server INTERFACE ${CMAKE_CURRENT_LIST_DIR}/nanoipc_server.cpp)

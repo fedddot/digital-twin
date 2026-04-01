@@ -14,7 +14,7 @@ target_link_libraries(
 	nanoipc_tests
 	PRIVATE
 	nanoipc_server
-	nanocobs_lib
+	nanoipc_utils
 	gtest
 	gtest_main
 )

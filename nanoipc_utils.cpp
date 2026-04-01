@@ -20,7 +20,7 @@ std::optional<std::size_t> nanoipc::find_delimiter(const ReadBuffer& read_buffer
     return std::nullopt;
 }
 
-inline std::optional<std::vector<std::uint8_t>> nanoipc::read_encoded_frame(ReadBuffer *read_buffer) {
+std::optional<std::vector<std::uint8_t>> nanoipc::read_encoded_frame(ReadBuffer *read_buffer) {
     const auto delimiter_index = find_delimiter(*read_buffer);
     if (!delimiter_index.has_value()) {
         return std::nullopt;
@@ -33,7 +33,7 @@ inline std::optional<std::vector<std::uint8_t>> nanoipc::read_encoded_frame(Read
     return std::make_optional(encoded_frame_data);
 }
 
-inline std::optional<std::vector<std::uint8_t>> nanoipc::read_frame(ReadBuffer *read_buffer) {
+std::optional<std::vector<std::uint8_t>> nanoipc::read_frame(ReadBuffer *read_buffer) {
     const auto encoded_frame_data = read_encoded_frame(read_buffer);
     if (!encoded_frame_data.has_value()) {
         return std::nullopt;
