@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
+#include <stdexcept>
 
 #include "nanoipc_read_buffer.hpp"
 
@@ -22,13 +23,20 @@ namespace nanoipc {
 			const ResponseSerializer& response_serializer,
 			const SerialDataWriter& serial_data_writer,
 			ReadBuffer *read_buffer
-		);
-		NanoIpcServer(const NanoIpcServer&) = delete;
-		NanoIpcServer& operator=(const NanoIpcServer&) = delete;
-
+		): m_request_handler(request_handler), m_request_parser(request_parser), m_response_serializer(response_serializer), m_serial_data_writer(serial_data_writer), m_read_buffer(read_buffer) {
+			if (!m_request_handler || !m_request_parser || !m_response_serializer || !m_serial_data_writer || !m_read_buffer) {
+				throw std::invalid_argument("invalid arguments in NanoIpcServer ctor");
+			}
+		}
+		NanoIpcServer(const NanoIpcServer&) = default;
+		NanoIpcServer& operator=(const NanoIpcServer&) = default;
 		virtual ~NanoIpcServer() noexcept = default;
 		void process();
 	private:
+		RequestHandler m_request_handler;
+		RequestParser m_request_parser;
+		ResponseSerializer m_response_serializer;
+		SerialDataWriter m_serial_data_writer;
 		ReadBuffer *m_read_buffer;
 	};
 }
