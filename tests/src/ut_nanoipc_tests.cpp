@@ -1,5 +1,6 @@
-#include "gtest/gtest.h"
 #include <string>
+
+#include "gtest/gtest.h"
 
 #include "nanoipc_server.hpp"
 

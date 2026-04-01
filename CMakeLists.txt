@@ -19,10 +19,13 @@ add_library(nanocobs_lib INTERFACE)
 target_sources(nanocobs_lib INTERFACE ${nanocobs_SOURCE_DIR}/cobs.c)
 target_include_directories(nanocobs_lib INTERFACE ${nanocobs_SOURCE_DIR})
 
+add_library(nanoipc_read_buffer INTERFACE)
+target_include_directories(nanoipc_read_buffer INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+
 add_library(nanoipc_server INTERFACE)
 target_sources(nanoipc_server INTERFACE ${CMAKE_CURRENT_LIST_DIR}/nanoipc_server.cpp)
 target_include_directories(nanoipc_server INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(nanoipc_server INTERFACE nanocobs_lib)
+target_link_libraries(nanoipc_server INTERFACE nanocobs_lib nanoipc_read_buffer)
 
 option(BUILD_TESTS "Build the project's test suite" ON)
 if(BUILD_TESTS)
