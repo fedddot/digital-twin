@@ -111,11 +111,41 @@ TEST(ut_nanoipc_client, sanity) {
 			request_sink.push_back(raw_data[i]);
 		}
 	};
+	auto frame_reader = [](TestNanoIpcClient::ReadEncodedFrameFn read_fn, ReadBuffer *buf) {
+		return read_fn(buf);
+	};
 
 	// WHEN
-	TestNanoIpcClient client(serialize_request, parse_response, serial_data_writer, &response_buffer);
+	TestNanoIpcClient client(serialize_request, parse_response, serial_data_writer, &response_buffer, frame_reader);
 	const auto response = client.send(test_request);
 
 	// THEN
 	ASSERT_EQ(response, expected_response);
+}
+
+TEST(ut_nanoipc_client, timeout) {
+	using TestNanoIpcClient = NanoIpcClient<ApiRequest, ApiResponse>;
+
+	// GIVEN: response buffer is always empty — frame will never arrive
+	VectorBuffer empty_response_buffer;
+	auto serial_data_writer = [](const std::uint8_t *, const std::size_t) {};
+
+	int attempts = 0;
+	auto frame_reader = [&attempts](TestNanoIpcClient::ReadEncodedFrameFn read_fn, ReadBuffer *buf) 
+		-> std::optional<std::vector<std::uint8_t>> {
+		const int max_attempts = 3;
+		while (attempts < max_attempts) {
+			++attempts;
+			const auto frame = read_fn(buf);
+			if (frame.has_value()) {
+				return frame;
+			}
+		}
+		return std::nullopt;
+	};
+
+	// WHEN / THEN
+	TestNanoIpcClient client(serialize_request, parse_response, serial_data_writer, &empty_response_buffer, frame_reader);
+	ASSERT_THROW(client.send(ApiRequest("hello")), std::runtime_error);
+	ASSERT_EQ(attempts, 3);
 }
