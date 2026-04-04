@@ -20,7 +20,7 @@ static bool encode_string(pb_ostream_t *stream, const pb_field_t *field, void *c
 static test_api_TestMessage get_test_message_descriptor(const TestMessage& msg);
 
 TEST(ut_nanopb_serializer, invalid_args) {
-	ASSERT_THROW(TestSerializer(nullptr), std::invalid_argument);
+	ASSERT_THROW(TestSerializer(nullptr, test_api_TestMessage_fields), std::invalid_argument);
 }
 
 TEST(ut_nanopb_serializer, sanity) {
@@ -29,7 +29,7 @@ TEST(ut_nanopb_serializer, sanity) {
 		.int_value = 42,
 		.string_value = "test"
 	};
-	TestSerializer serializer(get_test_message_descriptor);
+	TestSerializer serializer(get_test_message_descriptor, test_api_TestMessage_fields);
 
 	// WHEN
 	const auto result = serializer(message);
