@@ -11,3 +11,4 @@ Now both Client and Server implement the same logic twice. Let's fix it:
     - CMakeLists.txt should define all these interface libraries which can be reused by both client and server
 - under nanoipc_utils create a new class - nanoipc_ring_buffer.hpp which implements interface defined in nanoipc_read_buffer.hpp. In the corresponding CMakeLists.txt create a new library nanoipc_ring_buffer which can be used by both client and server
 - update client and server CMakeLists.txt to link against these libraries and remove the duplicated code
+- don't use #pragma once - instead use include guards in all header files
