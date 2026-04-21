@@ -35,11 +35,11 @@ set(STM32_CPU_FLAGS "-mcpu=cortex-m3 -mthumb -mfloat-abi=soft")
 # HSE_VALUE must match the crystal fitted to the board (Blue Pill: 8 MHz).
 set(STM32_COMMON_FLAGS
   "${STM32_CPU_FLAGS} -DSTM32F103xB -DHSE_VALUE=8000000UL \
--Os -ffunction-sections -fdata-sections -fno-exceptions"
+-Os -ffunction-sections -fdata-sections"
 )
 
 set(CMAKE_C_FLAGS_INIT   "${STM32_COMMON_FLAGS}")
-set(CMAKE_CXX_FLAGS_INIT "${STM32_COMMON_FLAGS} -fno-rtti -std=c++17")
+set(CMAKE_CXX_FLAGS_INIT "${STM32_COMMON_FLAGS} -std=c++17")
 
 # ── Linker flags ──────────────────────────────────────────────────────────────
 # nosys.specs  – stub out OS syscalls (bare metal, no OS).

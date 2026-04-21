@@ -82,7 +82,7 @@ FetchContent_MakeAvailable(cmsis_device_f1 cmsis_core)
 add_library(stm32_cmsis INTERFACE)
 target_include_directories(stm32_cmsis INTERFACE
   "${cmsis_device_f1_SOURCE_DIR}/Include"
-  "${cmsis_core_SOURCE_DIR}/CMSIS/Core/Include"
+  "${cmsis_core_SOURCE_DIR}/Include"
 )
 
 target_sources(example_server PRIVATE
