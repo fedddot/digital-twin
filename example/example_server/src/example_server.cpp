@@ -13,33 +13,19 @@
 #include "stm32f1xx.h"
 
 // ─── NanoIPC ─────────────────────────────────────────────────────────────────
-#include "nanoipc_reader.hpp"
-#include "nanoipc_writer.hpp"
-#include "nanopb_parser.hpp"
-#include "nanopb_serializer.hpp"
+#include "nanoipc_ring_buffer.hpp"
 
-// ─── Generated protobuf stubs (produced by nanopb_generator.py) ──────────────
-#include "example.pb.h"
-
-// ─── Local helpers ───────────────────────────────────────────────────────────
-#include "uart_read_buffer.hpp"
-
-// =============================================================================
-// Domain types
-// =============================================================================
-
-#include "../api/example_request.hpp"
-#include "../api/example_response.hpp"
+// ─── API ─────────────────────────────────────────────────────────────────────
+#include "../api/example_api.hpp"
 #include "../api/example_request_reader.hpp"
 #include "../api/example_response_writer.hpp"
-
 
 // =============================================================================
 // Globals
 // =============================================================================
 
 /// Buffer filled byte-by-byte from the UART Rx ISR.
-static example::UartReadBuffer<256> g_read_buffer;
+static nanoipc::NanoipcRingBuffer<256> g_read_buffer;
 
 // =============================================================================
 // UART implementation (USART1, PA9 TX / PA10 RX)
@@ -84,24 +70,18 @@ extern "C" void USART1_IRQHandler() {
 }
 
 // =============================================================================
-// Protobuf transformers
-// =============================================================================
-
-
-
-// =============================================================================
 // Business logic
 // =============================================================================
 
 /// Process a single request and return the corresponding response.
-static ExampleResponse process_request(const ExampleRequest& req) {
+static api::ExampleResponse process_request(const api::ExampleRequest& req) {
     switch (req.action) {
-        case Action::ADD:
-            return ExampleResponse{ .result = req.value + 1 };
-        case Action::SUBTRACT:
-            return ExampleResponse{ .result = req.value - 1 };
+        case api::Action::ADD:
+            return api::ExampleResponse{ .result = req.value + 1 };
+        case api::Action::SUBTRACT:
+            return api::ExampleResponse{ .result = req.value - 1 };
         default:
-            return ExampleResponse{ .result = req.value };
+            return api::ExampleResponse{ .result = req.value };
     }
 }
 
@@ -109,29 +89,26 @@ static ExampleResponse process_request(const ExampleRequest& req) {
 // Application entry points
 // =============================================================================
 
-static nanoipc::NanoIpcReader<ExampleRequest>  *g_reader  = nullptr;
-static nanoipc::NanoIpcWriter<ExampleResponse> *g_writer  = nullptr;
+static api::ExampleRequestReader  *g_reader = nullptr;
+static api::ExampleResponseWriter *g_writer = nullptr;
 
 /// Static storage for reader/writer instances (avoids heap allocation).
-static uint8_t g_reader_storage[sizeof(nanoipc::NanoIpcReader<ExampleRequest>)];
-static uint8_t g_writer_storage[sizeof(nanoipc::NanoIpcWriter<ExampleResponse>)];
+static uint8_t g_reader_storage[sizeof(api::ExampleRequestReader)];
+static uint8_t g_writer_storage[sizeof(api::ExampleResponseWriter)];
 
 /// Initialise UART and construct the reader/writer.
 void setup() {
     uart_init(9600);
 
-    // --- Reader: parses incoming ExampleRequest messages ---
     g_reader = new (g_reader_storage) api::ExampleRequestReader(&g_read_buffer);
 
-    // --- Writer: serialises outgoing ExampleResponse messages ---
-    auto raw_writer = [](const uint8_t* data, const std::size_t size) {
-        for (std::size_t i = 0; i < size; ++i) {
-            uart_write_byte(data[i]);
+    g_writer = new (g_writer_storage) api::ExampleResponseWriter(
+        [](const uint8_t* data, const std::size_t size) {
+            for (std::size_t i = 0; i < size; ++i) {
+                uart_write_byte(data[i]);
+            }
         }
-    };
-
-    g_writer = new (g_writer_storage) api::ExampleResponseWriter(raw_writer);
-
+    );
 }
 
 /// Main loop – poll the reader; when a complete request arrives, process it

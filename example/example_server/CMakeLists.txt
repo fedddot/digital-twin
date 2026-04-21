@@ -26,11 +26,9 @@ target_include_directories(example_server PRIVATE
 )
 
 target_link_libraries(example_server PRIVATE
-  nanoipc_reader
-  nanoipc_writer
-  nanopb_serializer
-  nanopb_parser
-  example_api
+  nanoipc_ring_buffer
+  example_request_reader
+  example_response_writer
 )
 
 # ── STM32 CMSIS headers (STM32F1 device + ARM Cortex-M3 core) ────────────────
