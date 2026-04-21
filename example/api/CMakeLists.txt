@@ -38,11 +38,25 @@ target_include_directories(example_api INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
 add_library(example_request_writer INTERFACE)
 target_include_directories(example_request_writer INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(example_request_writer INTERFACE example_api_pb nanopb_serializer example_api)
+target_link_libraries(
+    example_request_writer
+    INTERFACE
+    example_api_pb
+    example_api
+    nanopb_serializer
+    nanoipc_writer
+)
 
 add_library(example_request_reader INTERFACE)
 target_include_directories(example_request_reader INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(example_request_reader INTERFACE example_api_pb nanopb_parser example_api)
+target_link_libraries(
+    example_request_reader
+    INTERFACE
+    example_api_pb
+    example_api
+    nanopb_parser
+    nanoipc_reader
+)
 
 add_library(example_response_writer INTERFACE)
 target_include_directories(example_response_writer INTERFACE ${CMAKE_CURRENT_LIST_DIR})
