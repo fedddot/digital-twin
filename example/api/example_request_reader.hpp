@@ -2,7 +2,7 @@
 #define EXAMPLE_REQUEST_READER_HPP
 
 #include "example.pb.h"
-#include "example_request.hpp"
+#include "example_api.hpp"
 #include "nanoipc_reader.hpp"
 #include "nanopb_parser.hpp"
 

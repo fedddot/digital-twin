@@ -2,7 +2,7 @@
 #define EXAMPLE_REQUEST_WRITER_HPP
 
 #include "example.pb.h"
-#include "example_request.hpp"
+#include "example_api.hpp"
 #include "nanopb_serializer.hpp"
 #include "nanoipc_writer.hpp"
 
