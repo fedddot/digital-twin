@@ -1,19 +1,16 @@
 /// @file example_server.cpp
-/// @brief NanoIPC example server – runs on an Arduino Nano (ATmega328P).
+/// @brief NanoIPC example server for STM32F103C8T6 (Blue Pill).
 ///
-/// The server listens for ExampleRequest protobuf messages arriving over UART,
-/// processes each request, and responds with an ExampleResponse message.
-///
-/// Platform-specific UART code is compiled only when targeting AVR
-/// (__AVR__ is defined by avr-g++).  When building for a host PC (e.g. for
-/// unit testing / smoke-testing the logic) the UART callbacks are replaced by
-/// thin stdin/stdout stubs so that the exact same business logic can be
-/// exercised without hardware.
+/// Listens for ExampleRequest protobuf messages on USART1 (PA9 TX / PA10 RX),
+/// processes each request, and replies with an ExampleResponse message.
+/// System clock is 72 MHz (HSE 8 MHz × PLL × 9), configured by startup_stm32f103.c.
 
 // ─── Standard headers ────────────────────────────────────────────────────────
 #include <cstddef>
 #include <cstdint>
-#include <stdexcept>
+
+// ─── STM32 CMSIS device header ────────────────────────────────────────────────
+#include "stm32f1xx.h"
 
 // ─── NanoIPC ─────────────────────────────────────────────────────────────────
 #include "nanoipc_reader.hpp"
@@ -26,12 +23,6 @@
 
 // ─── Local helpers ───────────────────────────────────────────────────────────
 #include "uart_read_buffer.hpp"
-
-// ─── Platform-specific includes ──────────────────────────────────────────────
-#ifdef __AVR__
-#  include <avr/io.h>
-#  include <avr/interrupt.h>
-#endif
 
 // =============================================================================
 // Domain types
@@ -59,54 +50,46 @@ struct ExampleResponse {
 static example::UartReadBuffer<256> g_read_buffer;
 
 // =============================================================================
-// Platform-specific UART implementation
+// UART implementation (USART1, PA9 TX / PA10 RX)
 // =============================================================================
 
-#ifdef __AVR__
+// APB2 clock = 72 MHz (set by SystemInit via HSE 8 MHz × PLL × 9).
 
-/// @brief Initialise USART0 on the ATmega328P.
-/// @param baud Desired baud rate (e.g. 9600).
+/// @brief Initialise USART1.
 static void uart_init(const uint32_t baud) {
-    const uint16_t ubrr = static_cast<uint16_t>(F_CPU / (16UL * baud) - 1);
-    UBRR0H = static_cast<uint8_t>(ubrr >> 8);
-    UBRR0L = static_cast<uint8_t>(ubrr);
-    // Enable receiver, transmitter, and Rx-complete interrupt.
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
-    // 8-bit data, 1 stop bit, no parity.
-    UCSR0C = (1 << UCSZ01) | (1 << UCSZ00);
-    sei(); // enable global interrupts
+    // Enable clocks for GPIOA and USART1 (both on APB2).
+    RCC->APB2ENR |= RCC_APB2ENR_IOPAEN | RCC_APB2ENR_USART1EN;
+
+    // PA9 = USART1 TX: alternate-function push-pull, 50 MHz.
+    GPIOA->CRH &= ~(GPIO_CRH_CNF9  | GPIO_CRH_MODE9);
+    GPIOA->CRH |=   GPIO_CRH_CNF9_1 | GPIO_CRH_MODE9_1 | GPIO_CRH_MODE9_0;
+
+    // PA10 = USART1 RX: floating input (MODE = 00, CNF = 01).
+    GPIOA->CRH &= ~(GPIO_CRH_CNF10 | GPIO_CRH_MODE10);
+    GPIOA->CRH |=   GPIO_CRH_CNF10_0;
+
+    // BRR = fPCLK2 / baud.
+    USART1->BRR = static_cast<uint16_t>(72000000UL / baud);
+
+    // Enable USART, transmitter, receiver, and RXNE interrupt.
+    USART1->CR1 = USART_CR1_UE | USART_CR1_TE | USART_CR1_RE | USART_CR1_RXNEIE;
+
+    NVIC_EnableIRQ(USART1_IRQn);
 }
 
-/// @brief Transmit a single byte over USART0, blocking until the Tx buffer is
-/// ready.
+/// @brief Transmit one byte, blocking until the Tx register is empty.
 static void uart_write_byte(const uint8_t byte) {
-    while (!(UCSR0A & (1 << UDRE0))) {
-        // spin-wait
+    while (!(USART1->SR & USART_SR_TXE)) {}
+    USART1->DR = byte;
+}
+
+/// @brief USART1 RXNE ISR – push the received byte into the read buffer.
+/// C linkage matches the vector-table declaration in startup_stm32f103.c.
+extern "C" void USART1_IRQHandler() {
+    if (USART1->SR & USART_SR_RXNE) {
+        g_read_buffer.push_back(static_cast<uint8_t>(USART1->DR & 0xFFU));
     }
-    UDR0 = byte;
 }
-
-/// @brief USART0 Rx-complete ISR – push the received byte into the read buffer.
-ISR(USART_RX_vect) {
-    g_read_buffer.push_back(UDR0);
-}
-
-#else // ── Host (PC) stubs ────────────────────────────────────────────────────
-
-#include <cstdio>
-
-static void uart_init(const uint32_t /*baud*/) {
-    // Nothing to initialise on the host.
-}
-
-/// On the host, output bytes are written to stdout so the example_client can
-/// read them from the same serial device / pipe.
-static void uart_write_byte(const uint8_t byte) {
-    std::putchar(static_cast<int>(byte));
-    std::fflush(stdout);
-}
-
-#endif // __AVR__
 
 // =============================================================================
 // Protobuf transformers
@@ -146,7 +129,7 @@ static ExampleResponse process_request(const ExampleRequest& req) {
 }
 
 // =============================================================================
-// Application entry points (Arduino sketch-style)
+// Application entry points
 // =============================================================================
 
 static nanoipc::NanoIpcReader<ExampleRequest>  *g_reader  = nullptr;
@@ -206,15 +189,12 @@ void loop() {
 }
 
 // =============================================================================
-// Host entry point
+// Main
 // =============================================================================
 
-#ifndef __AVR__
 int main() {
     setup();
     while (true) {
         loop();
     }
-    return 0;
 }
-#endif // !__AVR__

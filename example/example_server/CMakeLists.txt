@@ -64,8 +64,34 @@ target_link_libraries(example_server PRIVATE
   example_api
 )
 
-# ── Generate .hex when cross-compiling for AVR ────────────────────────────────
-if(CMAKE_SYSTEM_PROCESSOR STREQUAL "avr")
-  include(${CMAKE_CURRENT_LIST_DIR}/avr-toolchain.cmake OPTIONAL)
-  avr_generate_hex(example_server)
-endif()
+# ── STM32 CMSIS headers (STM32F1 device + ARM Cortex-M3 core) ────────────────
+FetchContent_Declare(
+  cmsis_device_f1
+  GIT_REPOSITORY https://github.com/STMicroelectronics/cmsis_device_f1.git
+  GIT_TAG        v4.3.4
+  GIT_SHALLOW    TRUE
+)
+FetchContent_Declare(
+  cmsis_core
+  GIT_REPOSITORY https://github.com/STMicroelectronics/cmsis_core.git
+  GIT_TAG        v5.4.0
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(cmsis_device_f1 cmsis_core)
+
+add_library(stm32_cmsis INTERFACE)
+target_include_directories(stm32_cmsis INTERFACE
+  "${cmsis_device_f1_SOURCE_DIR}/Include"
+  "${cmsis_core_SOURCE_DIR}/CMSIS/Core/Include"
+)
+
+target_sources(example_server PRIVATE
+  "${CMAKE_CURRENT_LIST_DIR}/src/startup_stm32f103.c"
+)
+target_link_libraries(example_server PRIVATE stm32_cmsis)
+
+# Pull in the stm32_generate_bin macro from the toolchain helper.
+include(${CMAKE_CURRENT_LIST_DIR}/stm32-bluepill-toolchain.cmake OPTIONAL)
+stm32_generate_bin(example_server
+  "${CMAKE_CURRENT_LIST_DIR}/STM32F103C8Tx_FLASH.ld"
+)
