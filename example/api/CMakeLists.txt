@@ -1,12 +1,4 @@
-cmake_minimum_required(VERSION 3.16)
-
-project(example_proto C CXX)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_TESTS OFF)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../.. ${CMAKE_CURRENT_BINARY_DIR}/nanoipc_build EXCLUDE_FROM_ALL)
 
 find_package(Python REQUIRED)
@@ -27,11 +19,10 @@ add_custom_target(
     DEPENDS ${PROTO_GEN_DIR}/example.pb.c ${PROTO_GEN_DIR}/example.pb.h
 )
 
-add_library(example_api_pb INTERFACE)
+add_library(example_api_pb STATIC ${PROTO_GEN_DIR}/example.pb.c)
 add_dependencies(example_api_pb generate_example_api_pb)
-target_sources(example_api_pb INTERFACE ${PROTO_GEN_DIR}/example.pb.c)
-target_include_directories(example_api_pb INTERFACE ${PROTO_GEN_DIR})
-target_link_libraries(example_api_pb INTERFACE nanopb_common)
+target_include_directories(example_api_pb PUBLIC ${PROTO_GEN_DIR})
+target_link_libraries(example_api_pb PUBLIC nanopb_common)
 
 add_library(example_api INTERFACE)
 target_include_directories(example_api INTERFACE ${CMAKE_CURRENT_LIST_DIR})
