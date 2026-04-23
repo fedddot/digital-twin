@@ -17,8 +17,7 @@ UartConnection::UartConnection(
 	  m_data_bits(data_bits),
 	  m_on_char_received(on_char_received),
 	  m_is_open(false),
-	  m_listening(false),
-	  m_serial_port(nullptr)
+	  m_listening(false)
 {
 	if (device_path.empty()) {
 		throw std::invalid_argument("device_path cannot be empty");
@@ -48,18 +47,14 @@ void UartConnection::open()
 		throw std::logic_error("UartConnection is already open");
 	}
 
-	// Create serialib instance
-	m_serial_port = std::make_unique<serialib>();
-
 	// Open the serial port
-	if (m_serial_port->openDevice(
+	if (m_serial_port.openDevice(
 		m_device_path.c_str(),
 		m_baudrate,
 		m_data_bits,
 		m_parity,
 		m_stop_bits) != 1)
 	{
-		m_serial_port.reset();
 		throw std::runtime_error("Failed to open UART device: " + m_device_path);
 	}
 
@@ -75,8 +70,7 @@ void UartConnection::open()
 	} catch (const std::exception& e) {
 		m_listening.store(false);
 		m_is_open.store(false);
-		m_serial_port->closeDevice();
-		m_serial_port.reset();
+		m_serial_port.closeDevice();
 		throw std::runtime_error(std::string("Failed to start listening thread: ") + e.what());
 	}
 }
@@ -97,11 +91,7 @@ void UartConnection::close()
 	}
 
 	// Close the serial port
-	if (m_serial_port) {
-		m_serial_port->closeDevice();
-		m_serial_port.reset();
-	}
-
+    m_serial_port.closeDevice();
 	m_is_open.store(false);
 }
 
@@ -124,13 +114,9 @@ void UartConnection::write(const std::uint8_t *data, std::size_t data_size)
 		return;  // Nothing to write
 	}
 
-	if (!m_serial_port) {
-		throw std::runtime_error("Serial port handle is invalid");
-	}
-
-	// Write each byte
+    	// Write each byte
 	for (std::size_t i = 0; i < data_size; ++i) {
-		if (m_serial_port->writeChar(data[i]) == -1) {
+		if (m_serial_port.writeChar(data[i]) == -1) {
 			throw std::runtime_error("Failed to write data to UART device");
 		}
 	}
@@ -138,15 +124,11 @@ void UartConnection::write(const std::uint8_t *data, std::size_t data_size)
 
 void UartConnection::listen_thread_routine()
 {
-	if (!m_serial_port) {
-		return;
-	}
-
 	char byte_buffer = 0;
 	while (m_listening.load()) {
 		// Read one character with timeout (100ms)
 		// readChar returns 1 on success, 0 on timeout, -1 on error
-		int result = m_serial_port->readChar(&byte_buffer, 100);
+		int result = m_serial_port.readChar(&byte_buffer, 100);
 		if (result == 1) {
 			m_on_char_received(static_cast<uint8_t>(byte_buffer));
 		}
