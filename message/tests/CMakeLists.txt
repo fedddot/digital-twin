@@ -17,12 +17,12 @@ target_sources(test_api INTERFACE ${TEST_GENERATED_API_DIR}/test.pb.c)
 target_include_directories(test_api INTERFACE ${TEST_GENERATED_API_DIR})
 
 add_executable(
-    pb_message_tests
+    message_tests
     ${CMAKE_CURRENT_LIST_DIR}/src/ut_pb_message.cpp
 )
 
 target_link_libraries(
-    pb_message_tests
+    message_tests
     PRIVATE
     pb_message_reader
     pb_message_writer
@@ -37,9 +37,9 @@ target_link_libraries(
 )
 
 target_include_directories(
-    pb_message_tests
+    message_tests
     PRIVATE
     ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_test(NAME pb_message_tests COMMAND pb_message_tests)
+add_test(NAME message_tests COMMAND message_tests)
