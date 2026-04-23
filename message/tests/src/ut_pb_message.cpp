@@ -5,8 +5,8 @@
 
 #include "gtest/gtest.h"
 
-#include "frame_reader.hpp"
-#include "frame_writer.hpp"
+#include "cobs_frame_reader.hpp"
+#include "cobs_frame_writer.hpp"
 #include "pb_encode.h"
 #include "pb_message_reader.hpp"
 #include "pb_message_writer.hpp"
