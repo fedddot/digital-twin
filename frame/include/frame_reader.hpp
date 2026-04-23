@@ -14,9 +14,7 @@
 namespace nanoipc {
 	class FrameReader: public Reader<std::vector<std::uint8_t>> {
 	public:
-		FrameReader(
-			ReadBuffer *read_buffer
-		): m_read_buffer(read_buffer) {
+		FrameReader(ReadBuffer *read_buffer): m_read_buffer(read_buffer) {
 			if (!m_read_buffer) {
 				throw std::invalid_argument("read_buffer cannot be null");
 			}
