@@ -1,8 +1,0 @@
-syntax = "proto3";
-
-package test_api;
-
-message TestMessage {
-    int32 int_value = 1;
-    string string_value = 2;
-}
