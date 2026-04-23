@@ -27,6 +27,11 @@ target_link_libraries(
     pb_message_reader
     pb_message_writer
     test_api
+
+    frame_reader
+    frame_writer
+    ring_buffer
+
     gtest
     gtest_main
 )
