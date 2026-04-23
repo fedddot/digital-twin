@@ -1,4 +1,5 @@
 #include "frame_reader.hpp"
+#include "frame_writer.hpp"
 #include "ring_buffer.hpp"
 #include "gtest/gtest.h"
 
