@@ -29,6 +29,14 @@ nanoipc/
 │       └── src/
 │           ├── ut_pb_message.cpp     # Protocol Buffer tests
 │           └── ut_json_message.cpp   # JSON message tests
+├── utils/                       # Utility classes for embedded systems
+│   ├── include/
+│   │   └── uart_connection.hpp  # Linux UART connection management
+│   ├── src/
+│   │   └── uart_connection.cpp  # UART connection implementation
+│   └── tests/
+│       └── src/
+│           └── ut_uart_connection.cpp # UART connection tests
 ├── CMakeLists.txt              # Build configuration
 └── tests/                      # Integration tests (host build)
 ```
@@ -45,6 +53,59 @@ nanoipc uses a layered architecture:
 5. **Message Layer** - Protocol Buffer and JSON encoding/decoding
    - PbMessageReader/Writer: serialize/deserialize protobuf messages
    - JsonMessageReader/Writer: serialize/deserialize JSON messages using JsonCPP
+6. **Utils Layer** - Utility classes for embedded systems
+   - UartConnection: Linux UART connection management with serialib
+
+## UartConnection Usage
+
+The `UartConnection` class manages Linux UART connections with automatic background listening for incoming data.
+
+### Basic Example
+
+```cpp
+#include "uart_connection.hpp"
+#include <iostream>
+
+int main() {
+    // Define a callback for received characters
+    auto on_char_received = [](uint8_t c) {
+        std::cout << "Received: " << (int)c << std::endl;
+    };
+
+    // Create a UART connection
+    nanoipc::UartConnection uart(
+        "/dev/ttyUSB0",      // Device path
+        115200,              // Baudrate
+        0,                   // Parity (0=none, 1=odd, 2=even)
+        1,                   // Stop bits (1 or 2)
+        8,                   // Data bits (5-8)
+        on_char_received     // Callback for received characters
+    );
+
+    // Open the connection (starts background listening thread)
+    uart.open();
+
+    // Write data
+    const uint8_t data[] = {0x48, 0x65, 0x6C, 0x6C, 0x6F}; // "Hello"
+    uart.write(data, sizeof(data));
+
+    // ... do other work while listening for data in the background ...
+
+    // Close the connection
+    uart.close();
+
+    return 0;
+}
+```
+
+### Key Features
+
+- **Non-blocking I/O**: The `open()` method starts a background thread for listening, allowing non-blocking communication
+- **Exception-based Error Handling**: All methods throw exceptions on errors
+- **Move Semantics**: Supports move construction and assignment for efficient resource transfer
+- **Thread-Safe**: Uses atomic flags for thread synchronization
+- **Callback-Based**: Invokes a callback function for each received character
+- **Serialib Integration**: Uses the serialib library for low-level UART access
 
 ## Running the tests (host)
 
