@@ -6,7 +6,8 @@
 #include <stdexcept>
 #include <vector>
 
-#include "json/json.h"
+#include "json/reader.h"
+#include "json/value.h"
 #include "reader.hpp"
 
 namespace nanoipc {

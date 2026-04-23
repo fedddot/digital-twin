@@ -1,11 +1,12 @@
 #ifndef JSON_MESSAGE_WRITER_HPP
 #define JSON_MESSAGE_WRITER_HPP
 
-#include <cstddef>
+#include "json/writer.h"
+#include <cstdint>
 #include <stdexcept>
 #include <vector>
 
-#include "json/json.h"
+#include "json/value.h"
 #include "writer.hpp"
 
 namespace nanoipc {
