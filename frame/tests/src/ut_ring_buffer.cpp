@@ -29,16 +29,12 @@ TEST(ut_ring_buffer, push_back_and_pop_front) {
     ASSERT_EQ(buffer.size(), 0);
 }
 
-TEST(ut_ring_buffer, pop_front_empty_buffer_returns_zero) {
+TEST(ut_ring_buffer, pop_front_empty_buffer_throws) {
     // GIVEN
     RingBuffer<10> buffer;
 
-    // WHEN
-    const auto value = buffer.pop_front();
-
     // THEN
-    ASSERT_EQ(value, 0);
-    ASSERT_EQ(buffer.size(), 0);
+    ASSERT_THROW(buffer.pop_front(), std::out_of_range);
 }
 
 TEST(ut_ring_buffer, get_retrieves_element_without_removing) {
@@ -79,31 +75,50 @@ TEST(ut_ring_buffer, get_throws_on_empty_buffer) {
     ASSERT_THROW(buffer.get(0), std::out_of_range);
 }
 
-TEST(ut_ring_buffer, wrap_around_behavior) {
+TEST(ut_ring_buffer, push_back_throws_on_full_buffer) {
     // GIVEN
-    RingBuffer<5> buffer;
+    RingBuffer<3> buffer;
+    buffer.push_back(1);
+    buffer.push_back(2);
+    buffer.push_back(3);
 
-    // WHEN
-    for (int i = 0; i < 7; ++i) {
-        buffer.push_back(i);
-    }
-
-    // THEN - buffer should contain last 5 values: 2, 3, 4, 5, 6
-    ASSERT_EQ(buffer.size(), 5);
-    ASSERT_EQ(buffer.get(0), 2);
-    ASSERT_EQ(buffer.get(1), 3);
-    ASSERT_EQ(buffer.get(2), 4);
-    ASSERT_EQ(buffer.get(3), 5);
-    ASSERT_EQ(buffer.get(4), 6);
+    // WHEN / THEN
+    ASSERT_THROW(buffer.push_back(4), std::overflow_error);
+    ASSERT_EQ(buffer.size(), 3);
 }
 
-TEST(ut_ring_buffer, get_throws_after_wrapping) {
+TEST(ut_ring_buffer, wrap_around_with_pop_and_push) {
     // GIVEN
     RingBuffer<5> buffer;
-    for (int i = 0; i < 7; ++i) {
+    buffer.push_back(1);
+    buffer.push_back(2);
+    buffer.push_back(3);
+    buffer.push_back(4);
+    buffer.push_back(5);
+
+    // WHEN
+    buffer.pop_front();
+    buffer.pop_front();
+    buffer.push_back(6);
+    buffer.push_back(7);
+
+    // THEN
+    ASSERT_EQ(buffer.size(), 5);
+    ASSERT_EQ(buffer.get(0), 3);
+    ASSERT_EQ(buffer.get(1), 4);
+    ASSERT_EQ(buffer.get(2), 5);
+    ASSERT_EQ(buffer.get(3), 6);
+    ASSERT_EQ(buffer.get(4), 7);
+}
+
+TEST(ut_ring_buffer, get_throws_after_full_buffer_reached) {
+    // GIVEN
+    RingBuffer<5> buffer;
+    for (int i = 1; i <= 5; ++i) {
         buffer.push_back(i);
     }
 
     // THEN
     ASSERT_THROW(buffer.get(5), std::out_of_range);
 }
+

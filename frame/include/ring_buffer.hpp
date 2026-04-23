@@ -23,33 +23,36 @@ namespace nanoipc {
     /// - This implementation does not perform any synchronization. If used from
     ///   multiple threads or from interrupt context, the caller must provide
     ///   appropriate synchronization or use an ISR-safe variant.
-    /// - When the buffer is full, push_back() overwrites the oldest byte.
+    /// - All methods throw exceptions on error conditions (full buffer, empty buffer, out of range).
     template <std::size_t N>
     class RingBuffer : public ReadBuffer {
     public:
         /// @brief Construct an empty ring buffer.
-        RingBuffer() : m_head(0), m_tail(0), m_size(0) {}
+        RingBuffer() : m_head(0), m_tail(0), m_size(0) {
+
+        }
+        RingBuffer(const RingBuffer&) = default;
+        RingBuffer& operator=(const RingBuffer&) = default;
 
         /// @brief Append a byte to the back of the buffer.
-        ///
-        /// If the buffer is full the oldest byte is overwritten.
+        /// @param v The byte to append.
+        /// @throws std::overflow_error if the buffer is full.
         void push_back(std::uint8_t v) {
-            if (m_size < N) {
-                m_data[m_tail] = v;
-                m_tail = (m_tail + 1) % N;
-                ++m_size;
-            } else {
-                // overwrite oldest
-                m_data[m_tail] = v;
-                m_tail = (m_tail + 1) % N;
-                m_head = (m_head + 1) % N;
+            if (m_size >= N) {
+                throw std::overflow_error("RingBuffer: buffer is full");
             }
+            m_data[m_tail] = v;
+            m_tail = (m_tail + 1) % N;
+            ++m_size;
         }
 
         /// @brief Remove and return the oldest byte from the buffer.
-        /// @note Returns 0 if the buffer is empty.
+        /// @return The oldest byte in the buffer.
+        /// @throws std::out_of_range if the buffer is empty.
         std::uint8_t pop_front() override {
-            if (m_size == 0) return 0;
+            if (m_size == 0) {
+                throw std::out_of_range("RingBuffer: buffer is empty");
+            }
             const std::uint8_t v = m_data[m_head];
             m_head = (m_head + 1) % N;
             --m_size;
@@ -70,7 +73,6 @@ namespace nanoipc {
             }
             return m_data[(m_head + index) % N];
         }
-
     private:
         std::array<std::uint8_t, N> m_data;
         std::size_t m_head;
