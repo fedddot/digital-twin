@@ -6,6 +6,13 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+add_library(reader INTERFACE)
+target_include_directories(reader INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+
+add_library(writer INTERFACE)
+target_include_directories(writer INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+
+
 include(FetchContent)
 
 option(BUILD_TESTS "Build the project's test suite" ON)
