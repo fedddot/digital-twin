@@ -1,7 +1,7 @@
 FetchContent_Declare(
-  nanopb
-  GIT_REPOSITORY https://github.com/nanopb/nanopb.git
-  GIT_TAG        nanopb-0.4.9
+    nanopb
+    GIT_REPOSITORY https://github.com/nanopb/nanopb.git
+    GIT_TAG        nanopb-0.4.9
 )
 FetchContent_MakeAvailable(nanopb)
 
@@ -17,14 +17,14 @@ add_library(nanopb_decode INTERFACE)
 target_sources(nanopb_decode INTERFACE ${nanopb_SOURCE_DIR}/pb_decode.c)
 target_link_libraries(nanopb_decode INTERFACE nanopb_common)
 
-add_library(nanopb_serializer INTERFACE)
-target_include_directories(nanopb_serializer INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(nanopb_serializer INTERFACE nanopb_encode)
+add_library(pb_message_reader INTERFACE)
+target_include_directories(pb_message_reader INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+target_link_libraries(pb_message_reader INTERFACE nanopb_decode reader)
 
-add_library(nanopb_parser INTERFACE)
-target_include_directories(nanopb_parser INTERFACE ${CMAKE_CURRENT_LIST_DIR})
-target_link_libraries(nanopb_parser INTERFACE nanopb_decode)
+add_library(pb_message_writer INTERFACE)
+target_include_directories(pb_message_writer INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+target_link_libraries(pb_message_writer INTERFACE nanopb_encode writer)
 
 if(BUILD_TESTS)
-  add_subdirectory(tests)
+    add_subdirectory(tests)
 endif()

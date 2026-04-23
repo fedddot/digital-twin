@@ -17,25 +17,29 @@ target_sources(test_api INTERFACE ${TEST_GENERATED_API_DIR}/test.pb.c)
 target_include_directories(test_api INTERFACE ${TEST_GENERATED_API_DIR})
 
 add_executable(
-  nanopb_utils_tests
-  ${CMAKE_CURRENT_LIST_DIR}/src/ut_nanopb_serializer.cpp
-  ${CMAKE_CURRENT_LIST_DIR}/src/ut_nanopb_parser.cpp
+    message_tests
+    ${CMAKE_CURRENT_LIST_DIR}/src/ut_pb_message.cpp
 )
 
 target_link_libraries(
-  nanopb_utils_tests
-  PRIVATE
-  nanopb_serializer
-  nanopb_parser
-  test_api
-  gtest
-  gtest_main
+    message_tests
+    PRIVATE
+    pb_message_reader
+    pb_message_writer
+    test_api
+
+    cobs_frame_reader
+    cobs_frame_writer
+    ring_buffer
+
+    gtest
+    gtest_main
 )
 
 target_include_directories(
-  nanopb_utils_tests
-  PRIVATE
-  ${CMAKE_CURRENT_BINARY_DIR}
+    message_tests
+    PRIVATE
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_test(NAME nanopb_utils_tests COMMAND nanopb_utils_tests)
+add_test(NAME message_tests COMMAND message_tests)
