@@ -34,7 +34,7 @@ TEST(ut_pb_message, pb_message_writer_ctor_sanity) {
     const auto dummy_raw_data_writer = [](const std::uint8_t *raw_data, const std::size_t raw_data_size) {
 
     };
-    const FrameWriter frame_writer(dummy_raw_data_writer);
+    const CobsFrameWriter frame_writer(dummy_raw_data_writer);
 
     // THEN
     ASSERT_NO_THROW(PbMessageWriter<test_api_TestMessage> writer(&frame_writer, &test_api_TestMessage_msg));
@@ -59,7 +59,7 @@ TEST(ut_pb_message, pb_message_writing_reading_sanity) {
         }
     };
     CobsFrameReader frame_reader(&ring_buffer);
-    FrameWriter frame_writer(raw_data_writer);
+    CobsFrameWriter frame_writer(raw_data_writer);
     std::string string_buffer;
     PbMessageReader<test_api_TestMessage> pb_message_reader(
         &frame_reader,

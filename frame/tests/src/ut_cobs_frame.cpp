@@ -23,7 +23,7 @@ TEST(ut_cobs_frame, cobs_frame_writer_ctor_sanity) {
     };
 
     // THEN
-    ASSERT_NO_THROW(FrameWriter writer(dummy_raw_data_writer));
+    ASSERT_NO_THROW(CobsFrameWriter writer(dummy_raw_data_writer));
 }
 
 TEST(ut_cobs_frame, frame_writing_reading_sanity) {
@@ -38,7 +38,7 @@ TEST(ut_cobs_frame, frame_writing_reading_sanity) {
         }
     };
     CobsFrameReader reader(&ring_buffer);
-    FrameWriter writer(raw_data_writer);
+    CobsFrameWriter writer(raw_data_writer);
     std::optional<std::vector<std::uint8_t>> read_frame_data(std::nullopt);
 
     // THEN

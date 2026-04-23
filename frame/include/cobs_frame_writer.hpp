@@ -11,16 +11,16 @@
 #include "cobs.h"
 
 namespace nanoipc {
-	class FrameWriter: public Writer<std::vector<std::uint8_t>> {
+	class CobsFrameWriter: public Writer<std::vector<std::uint8_t>> {
 	public:
 		using RawDataWriter = std::function<void(const std::uint8_t *raw_data, const std::size_t raw_data_size)>;
-		FrameWriter(const RawDataWriter& raw_data_writer): m_raw_data_writer(raw_data_writer) {
+		CobsFrameWriter(const RawDataWriter& raw_data_writer): m_raw_data_writer(raw_data_writer) {
 			if (!m_raw_data_writer) {
 				throw std::invalid_argument("raw_data_writer cannot be empty");
 			}
 		}
-		FrameWriter(const FrameWriter&) = default;
-		FrameWriter& operator=(const FrameWriter&) = default;
+		CobsFrameWriter(const CobsFrameWriter&) = default;
+		CobsFrameWriter& operator=(const CobsFrameWriter&) = default;
 
 		void write(const std::vector<std::uint8_t>& data) const override {
 			const auto encoded_message = encode_frame(data);
