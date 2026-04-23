@@ -1,7 +1,6 @@
 #include <cstddef>
 #include <iostream>
 #include <fstream>
-#include <sstream>
 
 #include <CLI/CLI.hpp>
 
@@ -129,6 +128,7 @@ int main(int argc, char* argv[]) {
     JsonMessageWriter json_writer(&cobs_writer);
     
     // Send request
+    uart.flushReceiver();
     json_writer.write(request);
     
     // Read response
