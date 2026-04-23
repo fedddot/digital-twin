@@ -42,12 +42,12 @@ TEST(ut_pb_message, pb_message_writer_ctor_sanity) {
 
 TEST(ut_pb_message, pb_message_writing_reading_sanity) {
     // GIVEN
-    const auto test_string = "test string";
+    const auto test_string = std::string("test string");
     test_api_TestMessage pb_message {
         .int_value = 123,
         .string_value = {
             .funcs = { .encode = encode_string },
-            .arg = const_cast<char *>(test_string),
+            .arg = const_cast<std::string *>(&test_string),
         },
     };
 
@@ -58,18 +58,18 @@ TEST(ut_pb_message, pb_message_writing_reading_sanity) {
             ring_buffer.push_back(raw_data[i]);
         }
     };
-    FrameReader reader(&ring_buffer);
-    FrameWriter writer(raw_data_writer);
+    FrameReader frame_reader(&ring_buffer);
+    FrameWriter frame_writer(raw_data_writer);
     std::string string_buffer;
     PbMessageReader<test_api_TestMessage> pb_message_reader(
-        &reader,
+        &frame_reader,
         &test_api_TestMessage_msg,
         [&string_buffer](test_api_TestMessage *pb_message) {
             pb_message->string_value.funcs.decode = decode_string;
             pb_message->string_value.arg = &string_buffer;
         }
     );
-    PbMessageWriter<test_api_TestMessage> pb_message_writer(&writer, &test_api_TestMessage_msg);
+    PbMessageWriter<test_api_TestMessage> pb_message_writer(&frame_writer, &test_api_TestMessage_msg);
 
     std::optional<test_api_TestMessage> read_pb_message;
 
@@ -83,18 +83,19 @@ TEST(ut_pb_message, pb_message_writing_reading_sanity) {
     ASSERT_NO_THROW(pb_message_writer.write(pb_message));
     ASSERT_NO_THROW(read_pb_message = pb_message_reader.read());
     ASSERT_TRUE(read_pb_message.has_value());
-    // ASSERT_EQ(read_pb_message.value(), pb_message_data);
+    ASSERT_EQ(read_pb_message.value().int_value, pb_message.int_value);
+    ASSERT_EQ(string_buffer, test_string);
 }
 
 inline bool encode_string(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
 	if (!arg || !*arg) {
 		throw std::runtime_error("encode_string called with null arg");
 	}
-	const auto str = static_cast<const char *>(*arg);
+	const auto str = static_cast<const std::string *>(*arg);
 	if (!pb_encode_tag_for_field(stream, field)) {
 		return false;
 	}
-	return pb_encode_string(stream, (const pb_byte_t *)(str), std::strlen(str));
+	return pb_encode_string(stream, (const pb_byte_t *)(str->c_str()), str->size());
 }
 
 inline bool decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg) {
