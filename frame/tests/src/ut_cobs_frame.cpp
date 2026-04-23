@@ -13,7 +13,7 @@ TEST(ut_cobs_frame, cobs_frame_reader_ctor_sanity) {
     RingBuffer<10> ring_buffer;
 
     // THEN
-    ASSERT_NO_THROW(FrameReader reader(&ring_buffer));
+    ASSERT_NO_THROW(CobsFrameReader reader(&ring_buffer));
 }
 
 TEST(ut_cobs_frame, cobs_frame_writer_ctor_sanity) {
@@ -37,7 +37,7 @@ TEST(ut_cobs_frame, frame_writing_reading_sanity) {
             ring_buffer.push_back(raw_data[i]);
         }
     };
-    FrameReader reader(&ring_buffer);
+    CobsFrameReader reader(&ring_buffer);
     FrameWriter writer(raw_data_writer);
     std::optional<std::vector<std::uint8_t>> read_frame_data(std::nullopt);
 

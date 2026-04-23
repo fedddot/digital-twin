@@ -23,7 +23,7 @@ enum: std::size_t { MAX_BUFFER_SIZE = 256 };
 TEST(ut_pb_message, pb_message_reader_ctor_sanity) {
     // WHEN
     RingBuffer<MAX_BUFFER_SIZE> ring_buffer;
-    FrameReader frame_reader(&ring_buffer);
+    CobsFrameReader frame_reader(&ring_buffer);
 
     // THEN
     ASSERT_NO_THROW(PbMessageReader<test_api_TestMessage> reader(&frame_reader, &test_api_TestMessage_msg));
@@ -58,7 +58,7 @@ TEST(ut_pb_message, pb_message_writing_reading_sanity) {
             ring_buffer.push_back(raw_data[i]);
         }
     };
-    FrameReader frame_reader(&ring_buffer);
+    CobsFrameReader frame_reader(&ring_buffer);
     FrameWriter frame_writer(raw_data_writer);
     std::string string_buffer;
     PbMessageReader<test_api_TestMessage> pb_message_reader(

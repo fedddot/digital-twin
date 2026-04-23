@@ -12,15 +12,15 @@
 #include "cobs.h"
 
 namespace nanoipc {
-	class FrameReader: public Reader<std::vector<std::uint8_t>> {
+	class CobsFrameReader: public Reader<std::vector<std::uint8_t>> {
 	public:
-		FrameReader(ReadBuffer *read_buffer): m_read_buffer(read_buffer) {
+		CobsFrameReader(ReadBuffer *read_buffer): m_read_buffer(read_buffer) {
 			if (!m_read_buffer) {
 				throw std::invalid_argument("read_buffer cannot be null");
 			}
 		}
-		FrameReader(const FrameReader&) = default;
-		FrameReader& operator=(const FrameReader&) = default;
+		CobsFrameReader(const CobsFrameReader&) = default;
+		CobsFrameReader& operator=(const CobsFrameReader&) = default;
 
 		std::optional<std::vector<std::uint8_t>> read() override {
             const auto encoded_frame = read_encoded_frame(m_read_buffer);
