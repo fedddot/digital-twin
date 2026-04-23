@@ -87,7 +87,7 @@ TEST(ut_pb_message, pb_message_writing_reading_sanity) {
     ASSERT_EQ(string_buffer, test_string);
 }
 
-inline bool encode_string(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
+bool encode_string(pb_ostream_t *stream, const pb_field_t *field, void * const *arg) {
 	if (!arg || !*arg) {
 		throw std::runtime_error("encode_string called with null arg");
 	}
@@ -98,7 +98,7 @@ inline bool encode_string(pb_ostream_t *stream, const pb_field_t *field, void * 
 	return pb_encode_string(stream, (const pb_byte_t *)(str->c_str()), str->size());
 }
 
-inline bool decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg) {
+bool decode_string(pb_istream_t *stream, const pb_field_t *field, void **arg) {
 	if (!arg) {
 		throw std::runtime_error("encode_string called with null arg");
 	}
