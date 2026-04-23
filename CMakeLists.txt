@@ -28,8 +28,6 @@ endif()
 add_subdirectory(frame)
 
 
-
-# add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/nanoipc_utils)
 # add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/nanopb_utils)
 
 
