@@ -1,5 +1,5 @@
-#ifndef	NANOIPC_WRITER_HPP
-#define	NANOIPC_WRITER_HPP
+#ifndef	FRAME_WRITER_HPP
+#define	FRAME_WRITER_HPP
 
 #include <cstddef>
 #include <cstdint>
@@ -7,57 +7,51 @@
 #include <stdexcept>
 #include <vector>
 
-#include "nanoipc_utils.hpp"
+#include "writer.hpp"
+#include "cobs.h"
 
 namespace nanoipc {
-	/// @brief Generic writer that serializes `Message` instances and writes encoded frames.
-	///
-	/// `NanoIpcWriter` converts user-provided `Message` objects into raw bytes
-	/// using a `MessageSerializer`, encodes those bytes into a transport-ready
-	/// frame via `encode_frame`, and finally emits the encoded bytes using the
-	/// provided `RawDataWriter` callback.
-	template <typename Message>
-	class NanoIpcWriter {
+	class FrameWriter: public Writer<std::vector<std::uint8_t>> {
 	public:
-		/// @brief Function type that serializes a `Message` into raw bytes.
-		using MessageSerializer = std::function<std::vector<std::uint8_t>(const Message& message)>;
-		/// @brief Function type that writes raw bytes to the transport.
 		using RawDataWriter = std::function<void(const std::uint8_t *raw_data, const std::size_t raw_data_size)>;
-
-		/// @brief Construct a `NanoIpcWriter`.
-		///
-		/// @param message_serializer Callable that converts a `Message` into a vector of raw bytes.
-		/// @param raw_data_writer Callable that emits raw bytes to the underlying transport.
-		/// @throws std::invalid_argument if either callback is empty.
-		NanoIpcWriter(
-			const MessageSerializer& message_serializer,
+		FrameWriter(
 			const RawDataWriter& raw_data_writer
-		): m_message_serializer(message_serializer), m_raw_data_writer(raw_data_writer) {
-			if (!m_message_serializer || !m_raw_data_writer) {
-				throw std::invalid_argument("invalid arguments in NanoIpcWriter ctor");
+		): m_raw_data_writer(raw_data_writer) {
+			if (!m_raw_data_writer) {
+				throw std::invalid_argument("raw_data_writer cannot be empty");
 			}
 		}
-		NanoIpcWriter(const NanoIpcWriter&) = default;
-		NanoIpcWriter& operator=(const NanoIpcWriter&) = default;
-		virtual ~NanoIpcWriter() noexcept = default;
+		FrameWriter(const FrameWriter&) = default;
+		FrameWriter& operator=(const FrameWriter&) = default;
 
-		/// @brief Serialize and write `message` as an encoded frame.
-		///
-		/// The message is first serialized via the `MessageSerializer`, then
-		/// encoded with `encode_frame` to produce a transport-ready frame, and
-		/// finally emitted through the `RawDataWriter` callback.
-		///
-		/// @param message The message to serialize and write.
-		void write(const Message& message) {
-			const auto serial_message = m_message_serializer(message);
-			const auto encoded_message = encode_frame(serial_message.data(), serial_message.size());
+		void write(const std::vector<std::uint8_t>& data) const override {
+			const auto encoded_message = encode_frame(data);
 			m_raw_data_writer(encoded_message.data(), encoded_message.size());
 		}
 
 	private:
-		MessageSerializer m_message_serializer;
 		RawDataWriter m_raw_data_writer;
+        static std::vector<std::uint8_t> encode_frame(const std::vector<std::uint8_t>& data) {
+            enum: std::size_t { GROW_FACTOR = 2 };
+            std::vector<std::uint8_t> encoded_frame_data;
+            std::size_t receiver_data_size = data.size();
+            std::size_t encoded_frame_data_size = 0;
+
+            while (true) {
+                encoded_frame_data.resize(receiver_data_size);
+                const auto encode_result = cobs_encode(data.data(), data.size(), encoded_frame_data.data(), encoded_frame_data.size(), &encoded_frame_data_size);
+                if (encode_result == COBS_RET_SUCCESS) {
+                    break;
+                } else if (encode_result == COBS_RET_ERR_EXHAUSTED) {
+                    receiver_data_size *= GROW_FACTOR;
+                } else {
+                    throw std::runtime_error("failed to encode COBS frame");
+                }
+            }
+            encoded_frame_data.resize(encoded_frame_data_size);
+            return encoded_frame_data;
+        }
 	};
 }
 
-#endif // NANOIPC_WRITER_HPP
+#endif // FRAME_WRITER_HPP
