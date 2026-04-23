@@ -106,6 +106,7 @@ int main(int argc, char* argv[]) {
         request["type"] = "test_request";
         request["payload"] = "Hello, world!";
     }
+    std::cout << "Sending request: " << request.toStyledString() << std::endl;
     
     // Open serial port
     serialib uart;
