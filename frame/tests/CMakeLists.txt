@@ -7,6 +7,7 @@ target_link_libraries(
   frame_tests
   PRIVATE
   frame_reader
+  ring_buffer
   gtest
   gtest_main
 )
