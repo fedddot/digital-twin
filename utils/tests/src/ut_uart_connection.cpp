@@ -1,6 +1,5 @@
 #include "gtest/gtest.h"
 #include <stdexcept>
-#include <memory>
 #include <atomic>
 
 #include "uart_connection.hpp"

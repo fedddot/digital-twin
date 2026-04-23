@@ -1,24 +1,22 @@
 #include "uart_connection.hpp"
 
-namespace nanoipc {
+using namespace nanoipc;
 
-UartConnection::UartConnection(
+nanoipc::UartConnection::UartConnection(
 	const std::string& device_path,
 	const unsigned int baudrate,
 	const SerialParity parity,
 	const SerialStopBits stop_bits,
 	const SerialDataBits data_bits,
 	OnCharReceivedCallback on_char_received
-)
-	: m_device_path(device_path),
-	  m_baudrate(baudrate),
-	  m_parity(parity),
-	  m_stop_bits(stop_bits),
-	  m_data_bits(data_bits),
-	  m_on_char_received(on_char_received),
-	  m_is_open(false),
-	  m_listening(false)
-{
+):  m_device_path(device_path),
+    m_baudrate(baudrate),
+    m_parity(parity),
+    m_stop_bits(stop_bits),
+    m_data_bits(data_bits),
+    m_on_char_received(on_char_received),
+    m_is_open(false),
+    m_listening(false) {
 	if (device_path.empty()) {
 		throw std::invalid_argument("device_path cannot be empty");
 	}
@@ -30,8 +28,7 @@ UartConnection::UartConnection(
 	}
 }
 
-UartConnection::~UartConnection()
-{
+nanoipc::UartConnection::~UartConnection() noexcept {
 	try {
 		if (is_open()) {
 			close();
@@ -41,20 +38,13 @@ UartConnection::~UartConnection()
 	}
 }
 
-void UartConnection::open()
-{
+void nanoipc::UartConnection::open() {
 	if (is_open()) {
 		throw std::logic_error("UartConnection is already open");
 	}
 
 	// Open the serial port
-	if (m_serial_port.openDevice(
-		m_device_path.c_str(),
-		m_baudrate,
-		m_data_bits,
-		m_parity,
-		m_stop_bits) != 1)
-	{
+	if (m_serial_port.openDevice(m_device_path.c_str(), m_baudrate, m_data_bits, m_parity, m_stop_bits) != 1) {
 		throw std::runtime_error("Failed to open UART device: " + m_device_path);
 	}
 
@@ -63,20 +53,16 @@ void UartConnection::open()
 
 	// Start listening thread
 	try {
-		m_listen_thread = std::make_unique<std::thread>(
-			&UartConnection::listen_thread_routine,
-			this
-		);
-	} catch (const std::exception& e) {
+		m_listen_thread = std::make_unique<std::thread>(&UartConnection::listen_thread_routine, this);
+	} catch (...) {
 		m_listening.store(false);
 		m_is_open.store(false);
 		m_serial_port.closeDevice();
-		throw std::runtime_error(std::string("Failed to start listening thread: ") + e.what());
+		throw;
 	}
 }
 
-void UartConnection::close()
-{
+void nanoipc::UartConnection::close() {
 	if (!is_open()) {
 		throw std::logic_error("UartConnection is not open");
 	}
@@ -95,26 +81,18 @@ void UartConnection::close()
 	m_is_open.store(false);
 }
 
-bool UartConnection::is_open() const
-{
+bool nanoipc::UartConnection::is_open() const {
 	return m_is_open.load();
 }
 
-void UartConnection::write(const std::uint8_t *data, std::size_t data_size)
-{
+void nanoipc::UartConnection::write(const std::uint8_t *data, std::size_t data_size) {
 	if (!is_open()) {
 		throw std::runtime_error("UartConnection is not open");
 	}
-
-	if (!data && data_size > 0) {
-		throw std::invalid_argument("data pointer cannot be null when data_size > 0");
+	if (!data) {
+		throw std::invalid_argument("data pointer cannot be null");
 	}
-
-	if (data_size == 0) {
-		return;  // Nothing to write
-	}
-
-    	// Write each byte
+    // Write each byte
 	for (std::size_t i = 0; i < data_size; ++i) {
 		if (m_serial_port.writeChar(data[i]) == -1) {
 			throw std::runtime_error("Failed to write data to UART device");
@@ -122,8 +100,7 @@ void UartConnection::write(const std::uint8_t *data, std::size_t data_size)
 	}
 }
 
-void UartConnection::listen_thread_routine()
-{
+void nanoipc::UartConnection::listen_thread_routine() {
 	char byte_buffer = 0;
 	while (m_listening.load()) {
 		// Read one character with timeout (100ms)
@@ -134,5 +111,3 @@ void UartConnection::listen_thread_routine()
 		}
 	}
 }
-
-}  // namespace nanoipc

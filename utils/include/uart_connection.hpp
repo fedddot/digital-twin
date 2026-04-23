@@ -62,7 +62,7 @@ namespace nanoipc {
 		);
 
 		/// @brief Destructor. Ensures resources are properly released.
-		~UartConnection();
+		~UartConnection() noexcept;
 
 		UartConnection(const UartConnection&) = delete;
 		UartConnection& operator=(const UartConnection&) = delete;
