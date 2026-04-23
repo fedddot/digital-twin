@@ -33,7 +33,7 @@ namespace nanoipc {
                 if (1 != m_uart->readChar(&byte)) {
                     throw std::runtime_error("Failed to read byte from UART device");
                 }
-                m_read_buffer.push(static_cast<std::uint8_t>(byte));
+                m_read_buffer.push_back(static_cast<std::uint8_t>(byte));
             }
             return m_cobs_frame_reader->read();
 		}

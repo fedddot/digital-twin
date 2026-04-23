@@ -11,29 +11,25 @@ target_include_directories(serialib_interface INTERFACE ${serialib_SOURCE_DIR}/l
 target_sources(serialib_interface INTERFACE ${serialib_SOURCE_DIR}/lib/serialib.cpp)
 
 add_library(linux_uart_cobs_frame_reader INTERFACE)
-target_include_directories(
-    linux_uart_cobs_frame_reader
-    INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/include
-    ${nanocobs_SOURCE_DIR}
-)
+target_include_directories(linux_uart_cobs_frame_reader INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
 target_link_libraries(
     linux_uart_cobs_frame_reader
     INTERFACE
     cobs_frame_reader
     reader
-    read_buffer
+    ring_buffer
     serialib_interface
 )
 
 add_library(linux_uart_cobs_frame_writer INTERFACE)
-target_include_directories(
+target_include_directories(linux_uart_cobs_frame_writer INTERFACE ${CMAKE_CURRENT_LIST_DIR}/include)
+target_link_libraries(
     linux_uart_cobs_frame_writer
     INTERFACE
-    ${CMAKE_CURRENT_LIST_DIR}/include
-    ${nanocobs_SOURCE_DIR}
+    writer
+    cobs_frame_writer
+    serialib_interface
 )
-target_link_libraries(linux_uart_cobs_frame_writer INTERFACE writer)
 
 add_executable(json_client ${CMAKE_CURRENT_LIST_DIR}/src/json_client.cpp)
 target_link_libraries(
@@ -43,10 +39,5 @@ target_link_libraries(
     linux_uart_cobs_frame_writer
     json_message_reader
     json_message_writer
-    uart_connection
-    ring_buffer
+    serialib_interface
 )
-
-# if(BUILD_TESTS)
-#   add_subdirectory(tests)
-# endif()
