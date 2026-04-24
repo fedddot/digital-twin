@@ -25,5 +25,8 @@ if(BUILD_TESTS)
     enable_testing()
 endif()
 
+option(NANOIPC_LINUX_FEATURES "Build with Linux-specific features" ON)
+
+add_subdirectory(apps)
 add_subdirectory(frame)
 add_subdirectory(message)
